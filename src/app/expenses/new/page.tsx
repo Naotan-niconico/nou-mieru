@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { AuthGate } from "@/components/AuthGate";
 import { buttonClass, ErrorMessage, Field, inputClass } from "@/components/FormParts";
+import { UpgradeNotice } from "@/components/UpgradeNotice";
 import { costTypes, expenseCategories } from "@/lib/constants";
 import { todayIso } from "@/lib/format";
+import { getUsageLimits } from "@/lib/subscription";
 import { supabase } from "@/lib/supabase";
 
 type Crop = { id: string; name: string };
@@ -27,6 +29,7 @@ function ExpenseForm({ userId }: { userId: string }) {
   const [memo, setMemo] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -59,6 +62,11 @@ function ExpenseForm({ userId }: { userId: string }) {
     setSaving(true);
     setError("");
     try {
+      const usage = await getUsageLimits(supabase, userId);
+      if (!usage.isPaid && usage.monthlyExpenses.used >= usage.monthlyExpenses.limit) {
+        setLimitReached(true);
+        return;
+      }
       const receiptUrl = await uploadReceipt();
       const { error: saveError } = await supabase.from("expenses").insert({
         user_id: userId,
@@ -85,6 +93,7 @@ function ExpenseForm({ userId }: { userId: string }) {
     <AppShell title="経費を入れる" subtitle="支払った日と金額を入力します。">
       <form onSubmit={save} className="space-y-4 rounded-2xl bg-white p-5 shadow-sm">
         <ErrorMessage message={error} />
+        {limitReached ? <UpgradeNotice compact /> : null}
         <Field label="支払日"><input className={inputClass} type="date" value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} required /></Field>
         <Field label="経費カテゴリ">
           <select className={inputClass} value={category} onChange={(event) => setCategory(event.target.value)} required>

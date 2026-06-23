@@ -37,12 +37,17 @@ export function AppShell({
             <p className="text-2xl font-bold text-green-800">農みえる</p>
             <p className="text-sm text-stone-600">岩手農業リフォーラム</p>
           </Link>
-          <button
-            onClick={signOut}
-            className="rounded-xl border border-green-200 bg-white px-4 py-3 text-base font-bold text-green-800"
-          >
-            ログアウト
-          </button>
+          <div className="flex items-center gap-2">
+            <Link href="/subscribe" className="rounded-xl bg-green-700 px-4 py-3 text-base font-bold text-white">
+              プラン
+            </Link>
+            <button
+              onClick={signOut}
+              className="rounded-xl border border-green-200 bg-white px-4 py-3 text-base font-bold text-green-800"
+            >
+              ログアウト
+            </button>
+          </div>
         </div>
       </header>
 

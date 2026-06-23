@@ -30,6 +30,7 @@
 2. `supabase/schema.sql` をSQL Editorで実行します。
 3. AuthenticationのEmailログインを有効にします。
 4. Storageに `receipts` バケットが作成されていることを確認します。
+5. 有料プランを使う場合は、`supabase/subscriptions.sql` をSQL Editorで実行します。既に `subscriptions` テーブルがある場合も、RLSポリシーと更新トリガーを確認してください。
 
 ## 環境変数
 
@@ -38,6 +39,13 @@
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+STRIPE_SECRET_KEY=sk_test_your-stripe-secret-key
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your-stripe-publishable-key
+STRIPE_WEBHOOK_SECRET=whsec_your-stripe-webhook-secret
+STRIPE_PRICE_ID=price_your-monthly-price
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_SUPPORT_EMAIL=naotanmaru9world@gmail.com
 ```
 
 ## ローカル起動
@@ -48,6 +56,46 @@ npm run dev
 ```
 
 ブラウザで `http://localhost:3000` を開きます。
+
+## 無料・有料プラン
+
+無料プランでは、作物1件、機械1件、売上は当月5件、経費は当月5件まで登録できます。レシート一覧と月別レポートの全表示は有料プラン向けです。
+
+有料プランは月額500円（税込想定）で、売上・経費・作物・機械を無制限に登録できます。`subscriptions.status` が `active` または `trialing` のユーザーを有料として扱います。`current_period_end` が未来の手動設定でも有料として扱います。
+
+### 手動で有料にする
+
+Stripeを設定しなくても、SupabaseのTable Editorで対象ユーザーの `subscriptions` に行を追加または更新すれば有料にできます。
+
+```text
+user_id: 対象のAuthユーザーID
+status: active
+current_period_end: 任意（空でも可）
+```
+
+フロントエンドからこのテーブルを更新する権限はありません。
+
+## StripeとVercelの設定
+
+1. Stripeで月額500円のPriceを作成し、IDを `STRIPE_PRICE_ID` に設定します。
+2. Stripe DashboardのWebhookに `https://あなたのドメイン/api/stripe/webhook` を登録します。
+3. `checkout.session.completed`、`customer.subscription.created`、`customer.subscription.updated`、`customer.subscription.deleted`、`invoice.paid`、`invoice.payment_failed` を送信対象にします。
+4. 表示されたWebhook signing secretを `STRIPE_WEBHOOK_SECRET` に設定します。
+5. VercelのEnvironment Variablesに `.env.example` のSupabase/Stripe/App URLの値を追加し、Production・Preview・Developmentを必要に応じて選びます。秘密情報の `STRIPE_SECRET_KEY`、`STRIPE_WEBHOOK_SECRET`、`SUPABASE_SERVICE_ROLE_KEY` に `NEXT_PUBLIC_` は付けません。
+
+### ローカルWebhookテスト
+
+Stripe CLIにログインしてから、別のターミナルで以下を実行します。
+
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
+
+表示された `whsec_...` を `.env.local` の `STRIPE_WEBHOOK_SECRET` に設定します。テストイベントは次のように送れます。
+
+```bash
+stripe trigger checkout.session.completed
+```
 
 ## 画面
 

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthGate } from "@/components/AuthGate";
+import { PlanGate } from "@/components/PlanGate";
 import { yen } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
 
@@ -15,7 +16,7 @@ type ReceiptExpense = {
   receipt_image_url: string | null;
 };
 
-function ReceiptsContent({ userId }: { userId: string }) {
+function ReceiptsList({ userId }: { userId: string }) {
   const [rows, setRows] = useState<ReceiptExpense[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -30,7 +31,7 @@ function ReceiptsContent({ userId }: { userId: string }) {
   }, [userId]);
 
   return (
-    <AppShell title="レシートを見る" subtitle="保存したレシート画像を確認します。OCRは今回入れていません。">
+    <>
       {rows.length === 0 ? (
         <div className="rounded-2xl bg-white p-6 text-lg font-bold text-stone-700 shadow-sm">
           まだレシート画像がありません。
@@ -65,10 +66,20 @@ function ReceiptsContent({ userId }: { userId: string }) {
           </div>
         </div>
       ) : null}
-    </AppShell>
+    </>
   );
 }
 
 export default function ReceiptsPage() {
-  return <AuthGate>{(user) => <ReceiptsContent userId={user.id} />}</AuthGate>;
+  return (
+    <AuthGate>
+      {(user) => (
+        <AppShell title="レシートを見る" subtitle="保存したレシート画像を確認します。">
+          <PlanGate userId={user.id}>
+            <ReceiptsList userId={user.id} />
+          </PlanGate>
+        </AppShell>
+      )}
+    </AuthGate>
+  );
 }

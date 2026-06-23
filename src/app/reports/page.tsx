@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthGate } from "@/components/AuthGate";
+import { UpgradeNotice } from "@/components/UpgradeNotice";
 import { monthKey, yen } from "@/lib/format";
+import { getCurrentSubscription, isPaidSubscription } from "@/lib/subscription";
 import { supabase } from "@/lib/supabase";
 
 type SaleRow = { sale_date: string; amount: number };
@@ -13,14 +15,17 @@ type MonthSummary = { month: string; sales: number; expenses: number; profit: nu
 function ReportsContent({ userId }: { userId: string }) {
   const [salesRows, setSalesRows] = useState<SaleRow[]>([]);
   const [expenseRows, setExpenseRows] = useState<ExpenseRow[]>([]);
+  const [isPaid, setIsPaid] = useState(false);
 
   useEffect(() => {
     Promise.all([
       supabase.from("sales").select("sale_date,amount").eq("user_id", userId),
       supabase.from("expenses").select("expense_date,amount").eq("user_id", userId),
-    ]).then(([salesResult, expensesResult]) => {
+      getCurrentSubscription(supabase, userId),
+    ]).then(([salesResult, expensesResult, subscription]) => {
       setSalesRows(salesResult.data ?? []);
       setExpenseRows(expensesResult.data ?? []);
+      setIsPaid(isPaidSubscription(subscription));
     });
   }, [userId]);
 
@@ -48,12 +53,15 @@ function ReportsContent({ userId }: { userId: string }) {
   return (
     <AppShell title="結果を見る" subtitle="月ごとの売上、経費、利益を確認します。">
       {summaries.length === 0 ? (
-        <div className="rounded-2xl bg-white p-6 text-lg font-bold text-stone-700 shadow-sm">
-          まだ売上や経費がありません。
+        <div className="space-y-4">
+          <div className="rounded-2xl bg-white p-6 text-lg font-bold text-stone-700 shadow-sm">
+            まだ売上や経費がありません。
+          </div>
+          {!isPaid ? <UpgradeNotice compact /> : null}
         </div>
       ) : (
         <div className="space-y-4">
-          {summaries.map((item) => (
+          {(isPaid ? summaries : summaries.slice(0, 1)).map((item) => (
             <div key={item.month} className="rounded-2xl bg-white p-5 shadow-sm">
               <p className="text-2xl font-bold">{item.month}</p>
               <div className="mt-4 grid gap-3 text-lg font-bold sm:grid-cols-3">
@@ -67,6 +75,7 @@ function ReportsContent({ userId }: { userId: string }) {
               </div>
             </div>
           ))}
+          {!isPaid ? <UpgradeNotice compact /> : null}
         </div>
       )}
     </AppShell>

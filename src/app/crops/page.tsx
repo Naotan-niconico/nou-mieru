@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthGate } from "@/components/AuthGate";
 import { buttonClass, ErrorMessage, Field, inputClass, subButtonClass } from "@/components/FormParts";
+import { UpgradeNotice } from "@/components/UpgradeNotice";
+import { getUsageLimits } from "@/lib/subscription";
 import { supabase } from "@/lib/supabase";
 
 type Crop = { id: string; name: string; memo: string | null };
@@ -14,6 +16,7 @@ function CropsContent({ userId }: { userId: string }) {
   const [name, setName] = useState("");
   const [memo, setMemo] = useState("");
   const [error, setError] = useState("");
+  const [limitReached, setLimitReached] = useState(false);
 
   async function load() {
     const { data } = await supabase.from("crops").select("id,name,memo").eq("user_id", userId).order("created_at");
@@ -39,6 +42,13 @@ function CropsContent({ userId }: { userId: string }) {
       return;
     }
     setError("");
+    if (!editingId) {
+      const usage = await getUsageLimits(supabase, userId);
+      if (!usage.isPaid && usage.crops.used >= usage.crops.limit) {
+        setLimitReached(true);
+        return;
+      }
+    }
     if (editingId) {
       await supabase.from("crops").update({ name, memo, updated_at: new Date().toISOString() }).eq("id", editingId).eq("user_id", userId);
     } else {
@@ -65,6 +75,7 @@ function CropsContent({ userId }: { userId: string }) {
     <AppShell title="作物を見る" subtitle="作っている作物を登録します。">
       <form onSubmit={save} className="space-y-4 rounded-2xl bg-white p-5 shadow-sm">
         <ErrorMessage message={error} />
+        {limitReached ? <UpgradeNotice compact /> : null}
         <Field label="作物名">
           <input className={inputClass} value={name} onChange={(event) => setName(event.target.value)} required />
         </Field>

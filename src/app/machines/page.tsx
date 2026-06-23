@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthGate } from "@/components/AuthGate";
 import { buttonClass, ErrorMessage, Field, inputClass, subButtonClass } from "@/components/FormParts";
+import { UpgradeNotice } from "@/components/UpgradeNotice";
 import { machineTypes } from "@/lib/constants";
 import { yen } from "@/lib/format";
+import { getUsageLimits } from "@/lib/subscription";
 import { supabase } from "@/lib/supabase";
 
 type Machine = { id: string; name: string; machine_type: string | null; purchase_date: string | null; purchase_price: number | null; memo: string | null };
@@ -19,6 +21,7 @@ function MachinesContent({ userId }: { userId: string }) {
   const [purchasePrice, setPurchasePrice] = useState("");
   const [memo, setMemo] = useState("");
   const [error, setError] = useState("");
+  const [limitReached, setLimitReached] = useState(false);
 
   async function load() {
     const { data } = await supabase.from("machines").select("*").eq("user_id", userId).order("created_at");
@@ -52,6 +55,13 @@ function MachinesContent({ userId }: { userId: string }) {
       memo,
       updated_at: new Date().toISOString(),
     };
+    if (!editingId) {
+      const usage = await getUsageLimits(supabase, userId);
+      if (!usage.isPaid && usage.machines.used >= usage.machines.limit) {
+        setLimitReached(true);
+        return;
+      }
+    }
     if (editingId) {
       await supabase.from("machines").update(payload).eq("id", editingId).eq("user_id", userId);
     } else {
@@ -85,6 +95,7 @@ function MachinesContent({ userId }: { userId: string }) {
     <AppShell title="機械を見る" subtitle="トラクターなどの機械を登録します。">
       <form onSubmit={save} className="space-y-4 rounded-2xl bg-white p-5 shadow-sm">
         <ErrorMessage message={error} />
+        {limitReached ? <UpgradeNotice compact /> : null}
         <Field label="機械名"><input className={inputClass} value={name} onChange={(event) => setName(event.target.value)} required /></Field>
         <Field label="機械の種類">
           <select className={inputClass} value={machineType} onChange={(event) => setMachineType(event.target.value)}>

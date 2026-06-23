@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { AuthGate } from "@/components/AuthGate";
 import { buttonClass, ErrorMessage, Field, inputClass } from "@/components/FormParts";
+import { UpgradeNotice } from "@/components/UpgradeNotice";
 import { todayIso } from "@/lib/format";
 import { units } from "@/lib/constants";
+import { getUsageLimits } from "@/lib/subscription";
 import { supabase } from "@/lib/supabase";
 
 type Crop = { id: string; name: string };
@@ -23,6 +25,7 @@ function SalesForm({ userId }: { userId: string }) {
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
   const [error, setError] = useState("");
+  const [limitReached, setLimitReached] = useState(false);
 
   useEffect(() => {
     supabase.from("crops").select("id,name").eq("user_id", userId).order("created_at").then(({ data }) => {
@@ -52,6 +55,12 @@ function SalesForm({ userId }: { userId: string }) {
       return;
     }
 
+    const usage = await getUsageLimits(supabase, userId);
+    if (!usage.isPaid && usage.monthlySales.used >= usage.monthlySales.limit) {
+      setLimitReached(true);
+      return;
+    }
+
     const { error: saveError } = await supabase.from("sales").insert({
       user_id: userId,
       crop_id: cropId,
@@ -75,6 +84,7 @@ function SalesForm({ userId }: { userId: string }) {
     <AppShell title="売上を入れる" subtitle="販売した日と金額を入力します。">
       <form onSubmit={save} className="space-y-4 rounded-2xl bg-white p-5 shadow-sm">
         <ErrorMessage message={error} />
+        {limitReached ? <UpgradeNotice compact /> : null}
         <Field label="販売日"><input className={inputClass} type="date" value={saleDate} onChange={(event) => setSaleDate(event.target.value)} required /></Field>
         <Field label="作物">
           <select className={inputClass} value={cropId} onChange={(event) => setCropId(event.target.value)} required>

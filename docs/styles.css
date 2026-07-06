@@ -1,0 +1,193 @@
+:root{
+  --bg:#f7f3ea;
+  --text:#20251f;
+  --muted:#667062;
+  --line:#ded6c7;
+  --card:#fffdf7;
+  --accent:#2d6a3e;
+  --accent-dark:#1f4d2d;
+  --soft:#e8f1e6;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;
+  color:var(--text);
+  background:var(--bg);
+  line-height:1.75;
+}
+a{color:inherit}
+.site-header{
+  position:sticky;
+  top:0;
+  z-index:10;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px clamp(18px,4vw,56px);
+  background:rgba(247,243,234,.92);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.logo{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  text-decoration:none;
+  font-weight:800;
+}
+.logo-mark{
+  display:grid;
+  place-items:center;
+  width:36px;
+  height:36px;
+  border-radius:12px;
+  background:var(--accent);
+  color:white;
+  letter-spacing:.03em;
+}
+.nav{
+  display:flex;
+  gap:22px;
+  font-size:14px;
+  color:var(--muted);
+}
+.nav a{text-decoration:none}
+.nav a:hover{color:var(--accent)}
+.hero{
+  display:grid;
+  grid-template-columns: minmax(0,1.4fr) minmax(280px,.7fr);
+  gap:36px;
+  align-items:center;
+  padding:72px clamp(18px,5vw,80px) 56px;
+}
+.eyebrow,.section-label{
+  margin:0 0 12px;
+  color:var(--accent);
+  font-weight:800;
+  letter-spacing:.08em;
+  font-size:14px;
+}
+h1{
+  margin:0;
+  font-size:clamp(34px,6vw,64px);
+  line-height:1.15;
+  letter-spacing:-.04em;
+}
+h2{
+  margin:0 0 24px;
+  font-size:clamp(26px,4vw,42px);
+  line-height:1.25;
+  letter-spacing:-.03em;
+}
+h3{margin:0 0 10px;font-size:20px}
+.lead{
+  margin:24px 0;
+  color:var(--muted);
+  font-size:18px;
+}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap}
+.button{
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  padding:12px 18px;
+  border-radius:999px;
+  text-decoration:none;
+  font-weight:800;
+  border:1px solid var(--accent);
+}
+.primary{background:var(--accent);color:white}
+.primary:hover{background:var(--accent-dark)}
+.secondary{background:transparent;color:var(--accent)}
+.note{
+  color:var(--muted);
+  font-size:14px;
+  margin-top:16px;
+}
+.hero-card,.service-card,.price-card,.contact-box{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:28px;
+  box-shadow:0 20px 50px rgba(60,45,20,.08);
+}
+.hero-card{
+  padding:28px;
+  transform:rotate(1.2deg);
+}
+.card-title{
+  font-size:22px;
+  font-weight:900;
+  margin-bottom:14px;
+}
+.hero-card ul{margin:0;padding-left:20px}
+.hero-card li{margin:8px 0}
+.problem,.section{
+  padding:56px clamp(18px,5vw,80px);
+}
+.grid,.cards,.price-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
+}
+.tile{
+  padding:20px;
+  min-height:112px;
+  display:flex;
+  align-items:center;
+  background:var(--soft);
+  border:1px solid #d4e1d1;
+  border-radius:22px;
+  font-weight:700;
+}
+.cards{grid-template-columns:repeat(4,minmax(0,1fr))}
+.service-card,.price-card{padding:24px}
+.service-card p,.price-card p{color:var(--muted);margin:0}
+.alt{background:#efe8da}
+.steps{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:grid;
+  gap:12px;
+}
+.steps li{
+  display:grid;
+  grid-template-columns:120px 1fr;
+  gap:16px;
+  padding:18px 20px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+}
+.steps strong{color:var(--accent);font-size:18px}
+.price-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.price{font-size:28px!important;color:var(--text)!important;font-weight:900;margin:6px 0!important}
+.message p:not(.section-label),.contact p{
+  color:var(--muted);
+  max-width:840px;
+}
+.contact-box{
+  margin-top:22px;
+  padding:24px;
+}
+.footer{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  padding:28px clamp(18px,5vw,80px);
+  color:var(--muted);
+  border-top:1px solid var(--line);
+}
+@media (max-width:920px){
+  .hero{grid-template-columns:1fr;padding-top:48px}
+  .grid,.cards,.price-grid{grid-template-columns:1fr 1fr}
+  .nav{display:none}
+}
+@media (max-width:620px){
+  .grid,.cards,.price-grid{grid-template-columns:1fr}
+  .steps li{grid-template-columns:1fr;gap:4px}
+  .footer{display:block}
+  .hero-card{transform:none}
+}
